@@ -1,31 +1,22 @@
-# 🚀 TextCode Visualizer
+# TextCode Visualizer
 
-> **Natural Language to Code Syntax Engine** — an interactive web application that transforms ordinary human text (poetry, prose, philosophy) into a structured code syntax stream with real-time heuristic tokenization, external dictionary configuration, and multiple visualization modes.
-
-![HTML5](https://img.shields.io/badge/html5-%23E34F26.svg?style=for-the-badge&logo=html5&logoColor=white)
-![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)
-![JavaScript](https://img.shields.io/badge/javascript-%23F7DF1E.svg?style=for-the-badge&logo=javascript&logoColor=black)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
+> **Natural Language to Code Syntax Engine** — an interactive web application that transforms ordinary text into a structured code syntax stream with real-time heuristic tokenization, external dictionary configuration, and multiple visualization modes.
 ---
 
-## ✨ Features
+##  Features
 
-- **🧠 Universal Dictionary Engine**: Loads customizable rules, keywords, functions, and suffixes dynamically from external text files in the `dicts/` folder.
-- **🎨 6 Developer Themes**: Switch instantly between popular color schemes:
+- **Universal Dictionary Engine**: Loads customizable rules, keywords, functions, and suffixes dynamically from external text files in the `dicts/` folder.
+- **6 Developer Themes**: Switch instantly between popular color schemes:
   - *Dracula*
   - *Nord*
   - *Matrix Green*
   - *Cyberpunk Neon*
   - *Monokai*
   - *Solarized Dark*
-- **👁️ 3 Visualization Modes**:
+- **3 Visualization Modes**:
   1. **IDE View**: Classic code editor layout with line numbers, gutter, and status bar.
   2. **Matrix Flow**: Cyberpunk stream view powered by an animated HTML5 matrix canvas.
-  3. **Bento Cards**: Modern dashboard layout displaying category distribution charts, lexical complexity, and an interactive token inspector.
-- **📤 Export & Share**: Copy clean HTML code snippets to clipboard or download standalone HTML files with embedded styles.
-- **⚡ Zero Dependencies**: Built with vanilla JavaScript, Tailwind CSS (via CDN), and Lucide icons.
-
+  3. **Bento Cards**: Modern dashboard layout displaying category distribution charts, lexical complexity, and an 
 ---
 
 ## 📂 Project Structure
@@ -41,7 +32,8 @@ textcode-visualizer/
 
 ---
 
-## 🛠️ Quick Start & Installation
+##  Quick Start & Installation
+Try fhiek.github.io/TextCodeVisualizer or selfhost like that:
 
 Because external dictionary files are loaded via `fetch()`, running the app requires a local development server (to avoid CORS restrictions on `file://`).
 
@@ -55,13 +47,5 @@ Because external dictionary files are loaded via `fetch()`, running the app requ
 
 ---
 
-## 🌐 Live Demo
-
-Hosted on GitHub Pages:  
-👉 [https://your-username.github.io/textcode-visualizer/](https://your-username.github.io/textcode-visualizer/)
-
----
-
-## 📝 License
-
-Distributed under the MIT License. See `LICENSE` for more information.
+## Live Demo
+[fhiek.github.io/TextCodeVisualizer/](https://fhiek.github.io/TextCodeVisualizer/)
