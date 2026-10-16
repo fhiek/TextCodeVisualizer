@@ -457,9 +457,7 @@ And dreams of oceans on a distant shore.`,
         }
 
         function tokenizeText(text) {
-            const regex = /(".*?"|'.*?'|#.*?
-|\/\/.*?
-|\d+(?:\.\d+)?|[a-zA-ZÀ-ÿа-яА-ЯёЁ]+|[^\s\w]|\s+)/g;
+            const regex = /(".*?"|'.*?'|#.*?\n|\/\/.*?\n|\d+(?:\.\d+)?|[a-zA-ZÀ-ÿа-яА-ЯёЁ]+|[^\s\w]|\s+)/g;
             let match;
             let tokens = [];
             
