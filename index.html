@@ -333,8 +333,8 @@ And dreams of oceans on a distant shore.`,
             }
         };
 
-        // Fallback hardcoded dictionaries
-        const DEFAULT_KEYWORDS = ['is', 'are', 'was', 'were', 'be', 'been', 'being', 'the', 'a', 'an', 'and', 'or', 'but', 'if', 'then', 'else', 'when', 'where', 'why', 'how', 'all', 'each', 'every', 'both', 'few', 'more', 'most', 'some', 'any', 'no', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 'just', 'can', 'will', 'shall', 'should', 'would', 'could', 'may', 'might', 'must', 'to', 'from', 'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further', 'once', 'here', 'there', 'now', 'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'through', 'during', 'before', 'after', 'above', 'below', 'up', 'down', 'into', 'onto', 'per', 'и', 'а', 'но', 'да', 'или', 'если', 'то', 'за', 'от', 'до', 'из', 'у', 'к', 'на', 'по', 'о', 'об'];
+        // Fallback hardcoded dictionaries including core prepositions like 'о', 'об', etc.
+        const DEFAULT_KEYWORDS = ['is', 'are', 'was', 'were', 'be', 'been', 'being', 'the', 'a', 'an', 'and', 'or', 'but', 'if', 'then', 'else', 'when', 'where', 'why', 'how', 'all', 'each', 'every', 'both', 'few', 'more', 'most', 'some', 'any', 'no', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 'just', 'can', 'will', 'shall', 'should', 'would', 'could', 'may', 'might', 'must', 'to', 'from', 'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further', 'once', 'here', 'there', 'now', 'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'through', 'during', 'before', 'after', 'above', 'below', 'up', 'down', 'into', 'onto', 'per', 'и', 'а', 'но', 'да', 'или', 'если', 'то', 'за', 'от', 'до', 'из', 'у', 'к', 'на', 'по', 'о', 'об', 'обо', 'про', 'со'];
         const DEFAULT_FUNCTIONS = ['run', 'walk', 'fly', 'glow', 'shine', 'whisper', 'dance', 'sing', 'create', 'build', 'dream', 'breathe', 'think', 'speak', 'work', 'read', 'listen', 'look', 'see', 'feel', 'touch', 'hear', 'find', 'seek', 'discover', 'explore', 'wander', 'drift', 'flow', 'rise', 'fall', 'burn', 'freeze', 'melt', 'fade', 'grow', 'bloom', 'awaken', 'sleep', 'live', 'die', 'love', 'hate', 'smile', 'laugh', 'cry', 'fight', 'heal', 'transform', 'awakens', 'whispers', 'dances', 'dreams', 'pulses', 'merges', 'breathes', 'evolves', 'speaks', 'know', 'бежать', 'летать', 'сиять', 'танцевать', 'петь', 'создавать', 'строить', 'мечтать', 'дышать', 'думать', 'говорить', 'читать', 'слушать', 'смотреть', 'видеть', 'чувствовать', 'слышать', 'искать', 'открывать', 'исследовать', 'расти', 'цвести', 'спать', 'жить', 'любить', 'ненавидеть', 'улыбаться', 'смеяться', 'плакать', 'исцелять', 'трансформировать'];
         const DEFAULT_SUFFIXES = ['-ing', '-ed', '-ly', '-s', '-es', '-ость', '-тель', '-ать', '-ять', '-ить'];
 
@@ -357,7 +357,7 @@ And dreams of oceans on a distant shore.`,
             initMatrixCanvas();
         };
 
-        // Fetch external dictionaries dynamically with fallback
+        // Fetch external dictionaries dynamically with fallback ensuring core defaults are retained
         async function loadExternalDictionaries() {
             try {
                 console.log("Fetching external dictionaries from dicts/...");
@@ -375,9 +375,9 @@ And dreams of oceans on a distant shore.`,
                 const fnText = await fnRes.text();
                 const sufText = await sufRes.text();
 
-                GLOBAL_KEYWORDS.clear();
-                GLOBAL_FUNCTIONS.clear();
-                GLOBAL_SUFFIXES.length = 0;
+                // Merge fetched items with default base to prevent missing short words like 'о', 'об'
+                DEFAULT_KEYWORDS.forEach(k => GLOBAL_KEYWORDS.add(k));
+                DEFAULT_FUNCTIONS.forEach(f => GLOBAL_FUNCTIONS.add(f));
 
                 kwText.split(/[\s,]+/).forEach(w => {
                     const clean = w.trim().toLowerCase();
@@ -391,12 +391,12 @@ And dreams of oceans on a distant shore.`,
 
                 sufText.split(/[\s,]+/).forEach(s => {
                     const clean = s.trim();
-                    if (clean) GLOBAL_SUFFIXES.push(clean);
+                    if (clean && !GLOBAL_SUFFIXES.includes(clean)) GLOBAL_SUFFIXES.push(clean);
                 });
 
                 console.log(`Dictionaries loaded successfully. Keywords: ${GLOBAL_KEYWORDS.size}, Functions: ${GLOBAL_FUNCTIONS.size}, Suffixes: ${GLOBAL_SUFFIXES.length}`);
             } catch (error) {
-                console.warn("Could not load external dictionaries via fetch (likely due to file:// protocol restriction without a local server). Falling back to built-in dictionaries.", error);
+                console.warn("Could not load external dictionaries via fetch. Falling back to built-in default dictionaries.", error);
             }
         }
 
@@ -488,7 +488,7 @@ And dreams of oceans on a distant shore.`,
                     } else if (val[0] === val[0].toUpperCase()) {
                         type = 'variable';
                     } else {
-                        type = 'keyword';
+                        type = 'text';
                     }
                 } else if (/^\s+$/.test(val)) {
                     type = 'whitespace';
