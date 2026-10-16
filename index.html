@@ -286,8 +286,10 @@
 
     <!-- JavaScript Application Logic -->
     <script>
+        // Initialize Lucide icons
         lucide.createIcons();
 
+        // Preset texts for demonstration
         const PRESETS = {
             poetry: `"The midnight whispers secrets to the stars,"
 As silent shadows dance across the floor.
@@ -297,6 +299,7 @@ And dreams of oceans on a distant shore.`,
             philosophy: `To know thyself is the beginning of all wisdom. In the silence between thoughts, the universe speaks its true code. We are not human beings having a spiritual experience; we are spiritual beings having a human experience.`
         };
 
+        // Theme color definitions
         const THEMES = {
             dracula: {
                 bg: '#282a36', panel: '#1e1f29', border: '#44475a', text: '#f8f8f2',
@@ -332,7 +335,7 @@ And dreams of oceans on a distant shore.`,
 
         // Fallback hardcoded dictionaries
         const DEFAULT_KEYWORDS = ['is', 'are', 'was', 'were', 'be', 'been', 'being', 'the', 'a', 'an', 'and', 'or', 'but', 'if', 'then', 'else', 'when', 'where', 'why', 'how', 'all', 'each', 'every', 'both', 'few', 'more', 'most', 'some', 'any', 'no', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 'just', 'can', 'will', 'shall', 'should', 'would', 'could', 'may', 'might', 'must', 'to', 'from', 'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further', 'once', 'here', 'there', 'now', 'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'through', 'during', 'before', 'after', 'above', 'below', 'up', 'down', 'into', 'onto', 'per', 'и', 'а', 'но', 'да', 'или', 'если', 'то', 'за', 'от', 'до', 'из', 'у', 'к', 'на', 'по', 'о', 'об'];
-        const DEFAULT_FUNCTIONS = ['run', 'walk', 'fly', 'glow', 'shine', 'whisper', 'dance', 'sing', 'create', 'build', 'dream', 'breathe', 'think', 'speak', 'write', 'read', 'listen', 'look', 'see', 'feel', 'touch', 'hear', 'find', 'seek', 'discover', 'explore', 'wander', 'drift', 'flow', 'rise', 'fall', 'burn', 'freeze', 'melt', 'fade', 'grow', 'bloom', 'awaken', 'sleep', 'live', 'die', 'love', 'hate', 'smile', 'laugh', 'cry', 'fight', 'heal', 'transform', 'awakens', 'whispers', 'dances', 'dreams', 'pulses', 'merges', 'breathes', 'evolves', 'speaks', 'know', 'бежать', 'летать', 'сиять', 'танцевать', 'петь', 'создавать', 'строить', 'мечтать', 'дышать', 'думать', 'говорить', 'читать', 'слушать', 'смотреть', 'видеть', 'чувствовать', 'слышать', 'искать', 'открывать', 'исследовать', 'расти', 'цвести', 'спать', 'жить', 'любить', 'ненавидеть', 'улыбаться', 'смеяться', 'плакать', 'исцелять', 'трансформировать'];
+        const DEFAULT_FUNCTIONS = ['run', 'walk', 'fly', 'glow', 'shine', 'whisper', 'dance', 'sing', 'create', 'build', 'dream', 'breathe', 'think', 'speak', 'work', 'read', 'listen', 'look', 'see', 'feel', 'touch', 'hear', 'find', 'seek', 'discover', 'explore', 'wander', 'drift', 'flow', 'rise', 'fall', 'burn', 'freeze', 'melt', 'fade', 'grow', 'bloom', 'awaken', 'sleep', 'live', 'die', 'love', 'hate', 'smile', 'laugh', 'cry', 'fight', 'heal', 'transform', 'awakens', 'whispers', 'dances', 'dreams', 'pulses', 'merges', 'breathes', 'evolves', 'speaks', 'know', 'бежать', 'летать', 'сиять', 'танцевать', 'петь', 'создавать', 'строить', 'мечтать', 'дышать', 'думать', 'говорить', 'читать', 'слушать', 'смотреть', 'видеть', 'чувствовать', 'слышать', 'искать', 'открывать', 'исследовать', 'расти', 'цвести', 'спать', 'жить', 'любить', 'ненавидеть', 'улыбаться', 'смеяться', 'плакать', 'исцелять', 'трансформировать'];
         const DEFAULT_SUFFIXES = ['-ing', '-ed', '-ly', '-s', '-es', '-ость', '-тель', '-ать', '-ять', '-ить'];
 
         let GLOBAL_KEYWORDS = new Set(DEFAULT_KEYWORDS);
@@ -343,6 +346,7 @@ And dreams of oceans on a distant shore.`,
         let currentThemeName = 'dracula';
         let activeTokens = [];
 
+        // App initialization on window load
         window.onload = async function() {
             console.log("Initializing TextCode Visualizer...");
             await loadExternalDictionaries();
@@ -353,7 +357,7 @@ And dreams of oceans on a distant shore.`,
             initMatrixCanvas();
         };
 
-        // Load external dictionary files dynamically with fallback
+        // Fetch external dictionaries dynamically with fallback
         async function loadExternalDictionaries() {
             try {
                 console.log("Fetching external dictionaries from dicts/...");
@@ -396,24 +400,26 @@ And dreams of oceans on a distant shore.`,
             }
         }
 
+        // Load predefined text examples
         function loadPreset(presetKey) {
             const textarea = document.getElementById('textInput');
             textarea.value = PRESETS[presetKey];
             processText();
         }
 
+        // Clear input field
         function clearInput() {
             document.getElementById('textInput').value = '';
             processText();
         }
 
+        // Switch active visualization mode
         function setMode(mode) {
             currentMode = mode;
             ['ide', 'matrix', 'bento'].forEach(m => {
-                const viewEl = document.getElementById(`viewIde`);
-                document.getElementById(`viewIde`).classList.add('hidden');
-                document.getElementById(`viewMatrix`).classList.add('hidden');
-                document.getElementById(`viewBento`).classList.add('hidden');
+                document.getElementById('viewIde').classList.add('hidden');
+                document.getElementById('viewMatrix').classList.add('hidden');
+                document.getElementById('viewBento').classList.add('hidden');
                 
                 const btn = document.getElementById(`modeBtn${m.charAt(0).toUpperCase() + m.slice(1)}`);
                 if (btn) {
@@ -434,6 +440,7 @@ And dreams of oceans on a distant shore.`,
             }
         }
 
+        // Update active color theme
         function setTheme(themeName) {
             currentThemeName = themeName;
             const t = THEMES[themeName];
@@ -456,6 +463,7 @@ And dreams of oceans on a distant shore.`,
             renderOutput();
         }
 
+        // Lexical tokenization parser
         function tokenizeText(text) {
             const regex = /(".*?"|'.*?'|#.*?\n|\/\/.*?\n|\d+(?:\.\d+)?|[a-zA-ZÀ-ÿа-яА-ЯёЁ]+|[^\s\w]|\s+)/g;
             let match;
@@ -467,11 +475,7 @@ And dreams of oceans on a distant shore.`,
                 
                 if (/^(".*?"|'.*?')$/.test(val)) {
                     type = 'string';
-                } else if (/^(#|\/\/)/.test(val) || /^[\[].*[\]]$/.test(val)) {
-                    type = 'comment';
-                } else if (/^\d+/.test(val)) {
-                    type = 'number';
-                } else if (/^[^\s\w]+$/.test(val)) {
+                } else if (/^(#|\/\/)/.test(val) || /^\[.*\]$/.test(val)) { type = 'comment'; } else if (/^\d+/.test(val)) { type = 'number'; } else if (/^[^\s\w]+$/.test(val)) {
                     type = 'operator';
                 } else if (/^[a-zA-ZÀ-ÿа-яА-ЯёЁ]+$/.test(val)) {
                     let lower = val.toLowerCase();
@@ -494,6 +498,7 @@ And dreams of oceans on a distant shore.`,
             return tokens;
         }
 
+        // Process text input on change
         function processText() {
             const text = document.getElementById('textInput').value;
             document.getElementById('charCount').innerText = `${text.length} chars`;
@@ -503,6 +508,7 @@ And dreams of oceans on a distant shore.`,
             updateStats();
         }
 
+        // Render tokenized output across views
         function renderOutput() {
             const t = THEMES[currentThemeName];
             
@@ -562,6 +568,7 @@ And dreams of oceans on a distant shore.`,
             renderBentoCards(t);
         }
 
+        // Append styled token span element
         function appendTokenSpan(container, token, t) {
             const span = document.createElement('span');
             span.innerText = token.value;
@@ -571,6 +578,7 @@ And dreams of oceans on a distant shore.`,
             container.appendChild(span);
         }
 
+        // Resolve token type to theme color
         function getTokenColor(type, t) {
             switch(type) {
                 case 'keyword': return t.keyword;
@@ -584,6 +592,7 @@ And dreams of oceans on a distant shore.`,
             }
         }
 
+        // Update token overview stats
         function updateStats() {
             let counts = { keyword: 0, function: 0, variable: 0, string: 0, number: 0, operator: 0 };
             activeTokens.forEach(tok => {
@@ -595,6 +604,7 @@ And dreams of oceans on a distant shore.`,
             document.getElementById('statVariables').innerText = counts.variable;
         }
 
+        // Render Bento Card metrics and distribution
         function renderBentoCards(t) {
             let counts = { keyword: 0, function: 0, variable: 0, string: 0, number: 0, operator: 0 };
             activeTokens.forEach(tok => {
@@ -640,6 +650,7 @@ And dreams of oceans on a distant shore.`,
             });
         }
 
+        // Initialize Matrix canvas animation
         function initMatrixCanvas() {
             const canvas = document.getElementById('matrixCanvas');
             const ctx = canvas.getContext('2d');
@@ -676,6 +687,7 @@ And dreams of oceans on a distant shore.`,
             setInterval(draw, 33);
         }
 
+        // Resize Matrix canvas
         function resizeMatrixCanvas() {
             const canvas = document.getElementById('matrixCanvas');
             if (canvas) {
@@ -684,6 +696,7 @@ And dreams of oceans on a distant shore.`,
             }
         }
 
+        // Copy highlighted HTML snippet to clipboard
         function copyHtmlSnippet() {
             const t = THEMES[currentThemeName];
             let htmlSnippet = `<div style="background-color: ${t.bg}; color: ${t.text}; padding: 20px; font-family: 'JetBrains Mono', monospace; border-radius: 12px;">\n`;
@@ -710,6 +723,7 @@ And dreams of oceans on a distant shore.`,
             document.body.removeChild(textArea);
         }
 
+        // Download standalone HTML page
         function downloadHtmlFile() {
             const t = THEMES[currentThemeName];
             let bodyContent = '';
@@ -750,10 +764,12 @@ And dreams of oceans on a distant shore.`,
             showToast("Standalone HTML file downloaded!");
         }
 
+        // Helper function to escape HTML entities
         function escapeHtml(text) {
             return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
         }
 
+        // Display toast notification
         function showToast(message) {
             const toast = document.getElementById('toast');
             document.getElementById('toastMessage').innerText = message;
