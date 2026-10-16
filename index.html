@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TextCode Visualizer - Natural Language Syntax Highlighter</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                        sans: ['"Inter"', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts: JetBrains Mono & Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .code-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+        .glow-effect {
+            box-shadow: 0 0 25px -5px rgba(var(--glow-color), 0.3);
+        }
+    </style>
+</head>
+<body class="bg-[#121316] text-[#e2e8f0] min-h-screen flex flex-col selection:bg-cyan-500 selection:text-black">
+
+    <!-- Top Navigation Bar -->
+    <header class="border-b border-white/10 bg-[#18191f]/80 backdrop-blur-md sticky top-0 z-50 px-4 py-3 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+                <i data-lucide="code-2" class="w-6 h-6 text-white"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg tracking-wide bg-gradient-to-r from-cyan-400 via-indigo-300 to-pink-400 bg-clip-text text-transparent">TextCode Visualizer</h1>
+                <p class="text-xs text-slate-400">Natural Language to Code Syntax Engine</p>
+            </div>
+        </div>
+
+        <!-- Controls: Theme, Mode, Presets -->
+        <div class="flex items-center flex-wrap gap-3">
+            <!-- Theme Selector -->
+            <div class="flex items-center gap-1.5 bg-black/30 border border-white/10 rounded-lg p-1">
+                <span class="text-xs text-slate-400 px-2 font-medium">Theme:</span>
+                <select id="themeSelect" class="bg-transparent text-xs text-cyan-300 font-mono font-semibold focus:outline-none cursor-pointer pr-2">
+                    <option value="dracula" class="bg-[#18191f]">Dracula</option>
+                    <option value="nord" class="bg-[#18191f]">Nord</option>
+                    <option value="matrix" class="bg-[#18191f]">Matrix Green</option>
+                    <option value="cyberpunk" class="bg-[#18191f]">Cyberpunk Neon</option>
+                    <option value="monokai" class="bg-[#18191f]">Monokai</option>
+                    <option value="solarized" class="bg-[#18191f]">Solarized Dark</option>
+                </select>
+            </div>
+
+            <!-- Visualization Mode -->
+            <div class="flex bg-black/30 border border-white/10 rounded-lg p-1 gap-1">
+                <button onclick="setMode('ide')" id="modeBtnIde" class="px-3 py-1.5 rounded-md text-xs font-medium transition-all bg-cyan-500 text-black shadow-sm flex items-center gap-1.5">
+                    <i data-lucide="terminal" class="w-3.5 h-3.5"></i> IDE View
+                </button>
+                <button onclick="setMode('matrix')" id="modeBtnMatrix" class="px-3 py-1.5 rounded-md text-xs font-medium transition-all text-slate-300 hover:text-white flex items-center gap-1.5">
+                    <i data-lucide="activity" class="w-3.5 h-3.5"></i> Matrix Flow
+                </button>
+                <button onclick="setMode('bento')" id="modeBtnBento" class="px-3 py-1.5 rounded-md text-xs font-medium transition-all text-slate-300 hover:text-white flex items-center gap-1.5">
+                    <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i> Bento Cards
+                </button>
+            </div>
+
+            <!-- Export Buttons -->
+            <div class="flex items-center gap-2">
+                <button onclick="copyHtmlSnippet()" class="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs font-medium transition flex items-center gap-1.5 text-slate-200">
+                    <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copy HTML
+                </button>
+                <button onclick="downloadHtmlFile()" class="px-3 py-1.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black font-semibold rounded-lg text-xs transition shadow-lg shadow-cyan-500/20 flex items-center gap-1.5">
+                    <i data-lucide="download" class="w-3.5 h-3.5"></i> Download
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Left Column: Input Panel & Presets -->
+        <section class="lg:col-span-4 flex flex-col gap-4">
+            <!-- Presets Box -->
+            <div class="bg-[#18191f] border border-white/10 rounded-2xl p-4 shadow-xl">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                        <i data-lucide="sparkles" class="w-4 h-4 text-cyan-400"></i> Preset Examples
+                    </h3>
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="loadPreset('poetry')" class="px-3 py-2 bg-white/5 hover:bg-cyan-500/10 hover:border-cyan-500/50 border border-white/10 rounded-xl text-xs font-medium text-left transition group">
+                        <div class="text-cyan-400 font-semibold group-hover:text-cyan-300">Poetry</div>
+                        <div class="text-[10px] text-slate-400 truncate">Midnight Whispers</div>
+                    </button>
+                    <button onclick="loadPreset('prose')" class="px-3 py-2 bg-white/5 hover:bg-cyan-500/10 hover:border-cyan-500/50 border border-white/10 rounded-xl text-xs font-medium text-left transition group">
+                        <div class="text-cyan-400 font-semibold group-hover:text-cyan-300">Prose</div>
+                        <div class="text-[10px] text-slate-400 truncate">Neon Metropolis</div>
+                    </button>
+                    <button onclick="loadPreset('philosophy')" class="px-3 py-2 bg-white/5 hover:bg-cyan-500/10 hover:border-cyan-500/50 border border-white/10 rounded-xl text-xs font-medium text-left transition group">
+                        <div class="text-cyan-400 font-semibold group-hover:text-cyan-300">Philosophy</div>
+                        <div class="text-[10px] text-slate-400 truncate">Wisdom & Soul</div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Live Text Input Editor -->
+            <div class="bg-[#18191f] border border-white/10 rounded-2xl p-4 shadow-xl flex flex-col flex-1">
+                <div class="flex items-center justify-between mb-3">
+                    <label for="textInput" class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                        <i data-lucide="edit-3" class="w-4 h-4 text-indigo-400"></i> Natural Language Input
+                    </label>
+                    <span id="charCount" class="text-[10px] text-slate-500 font-mono">0 chars</span>
+                </div>
+                <textarea id="textInput" rows="10" 
+                    class="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-sm code-font text-slate-200 placeholder-slate-600 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition resize-y"
+                    placeholder="Type or paste your natural language text here..."
+                    oninput="processText()"></textarea>
+
+                <div class="mt-3 flex items-center justify-between text-xs text-slate-400">
+                    <span class="flex items-center gap-1.5"><i data-lucide="cpu" class="w-3.5 h-3.5 text-cyan-400"></i> Heuristic AI Tokenizer Active</span>
+                    <button onclick="clearInput()" class="hover:text-red-400 transition flex items-center gap-1">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Clear
+                    </button>
+                </div>
+            </div>
+
+            <!-- Token Stats Quick Overview -->
+            <div class="bg-[#18191f] border border-white/10 rounded-2xl p-4 shadow-xl grid grid-cols-3 gap-3 text-center">
+                <div class="bg-black/30 p-2.5 rounded-xl border border-white/5">
+                    <div id="statKeywords" class="text-base font-bold text-cyan-400 code-font">0</div>
+                    <div class="text-[10px] text-slate-400 uppercase mt-0.5">Keywords</div>
+                </div>
+                <div class="bg-black/30 p-2.5 rounded-xl border border-white/5">
+                    <div id="statFunctions" class="text-base font-bold text-yellow-400 code-font">0</div>
+                    <div class="text-[10px] text-slate-400 uppercase mt-0.5">Functions</div>
+                </div>
+                <div class="bg-black/30 p-2.5 rounded-xl border border-white/5">
+                    <div id="statVariables" class="text-base font-bold text-pink-400 code-font">0</div>
+                    <div class="text-[10px] text-slate-400 uppercase mt-0.5">Variables</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right Column: Visualization Display Area -->
+        <section class="lg:col-span-8 flex flex-col gap-4">
+            
+            <!-- Mode 1: IDE Editor View -->
+            <div id="viewIde" class="visualization-view flex flex-col rounded-2xl overflow-hidden border shadow-2xl transition-all duration-300">
+                <div id="ideHeader" class="px-4 py-3 flex items-center justify-between border-b">
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 rounded-full bg-red-500/80 cursor-pointer"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-500/80 cursor-pointer"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-500/80 cursor-pointer"></div>
+                        <span id="ideFileName" class="ml-3 text-xs font-mono opacity-70">main.nlp</span>
+                    </div>
+                    <div class="flex items-center gap-3 text-xs font-mono opacity-60">
+                        <span id="tokenTypeIndicator" class="px-2 py-0.5 rounded bg-black/20">UTF-8</span>
+                        <span>NL-Syntax v2.6</span>
+                    </div>
+                </div>
+
+                <div id="ideBody" class="p-4 md:p-6 code-font text-sm leading-relaxed overflow-x-auto min-h-[380px] max-h-[550px] overflow-y-auto flex">
+                    <div id="lineNumbers" class="select-none pr-6 text-right opacity-30 font-mono text-xs flex flex-col border-r border-white/10 mr-6">
+                        <span>1</span>
+                    </div>
+                    <div id="codeOutput" class="flex-1 whitespace-pre-wrap break-words"></div>
+                </div>
+
+                <div id="ideFooter" class="px-4 py-2 border-t flex items-center justify-between text-xs font-mono opacity-70">
+                    <div class="flex items-center gap-4">
+                        <span id="statusLnCol">Ln 1, Col 1</span>
+                        <span id="statusTokensCount">0 tokens</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+                        <span>Live Parsing Active</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mode 2: Matrix Flow View -->
+            <div id="viewMatrix" class="visualization-view hidden flex-col rounded-2xl overflow-hidden border shadow-2xl p-6 min-h-[480px] relative">
+                <div class="absolute inset-0 bg-black/80 z-0 overflow-hidden" id="matrixCanvasContainer">
+                    <canvas id="matrixCanvas" class="w-full h-full opacity-40"></canvas>
+                </div>
+                <div class="relative z-10 flex flex-col gap-4 h-full justify-between">
+                    <div class="flex items-center justify-between bg-black/60 backdrop-blur-md p-3 rounded-xl border border-white/10">
+                        <span class="text-xs font-mono text-green-400 flex items-center gap-2">
+                            <i data-lucide="terminal" class="w-4 h-4"></i> MATRIX_FLOW_STREAM // NEURAL_DECODER
+                        </span>
+                        <span id="matrixTokenCount" class="text-xs font-mono text-slate-400">0 stream nodes</span>
+                    </div>
+                    <div id="matrixStreamOutput" class="code-font text-lg md:text-xl leading-loose p-6 bg-black/50 backdrop-blur-md rounded-2xl border border-green-500/20 shadow-[0_0_30px_rgba(0,255,100,0.1)] max-h-[360px] overflow-y-auto flex flex-wrap gap-2"></div>
+                </div>
+            </div>
+
+            <!-- Mode 3: Bento Grid View -->
+            <div id="viewBento" class="visualization-view hidden grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-[#18191f] border border-white/10 rounded-2xl p-5 shadow-xl flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                                <i data-lucide="pie-chart" class="w-4 h-4 text-cyan-400"></i> Token Category Distribution
+                            </h4>
+                        </div>
+                        <div id="bentoDistribution" class="space-y-3"></div>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-white/5 text-xs text-slate-400 flex justify-between">
+                        <span>Total Parsed Units</span>
+                        <span id="bentoTotalTokens" class="font-mono text-cyan-400 font-semibold">0</span>
+                    </div>
+                </div>
+
+                <div class="bg-[#18191f] border border-white/10 rounded-2xl p-5 shadow-xl flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                                <i data-lucide="cpu" class="w-4 h-4 text-indigo-400"></i> Neural Analysis
+                            </h4>
+                        </div>
+                        <div class="space-y-3 text-xs text-slate-300">
+                            <div class="bg-black/30 p-3 rounded-xl border border-white/5 flex items-center justify-between">
+                                <span class="text-slate-400">Lexical Complexity</span>
+                                <span id="bentoComplexity" class="font-mono text-yellow-400 font-semibold">Moderate</span>
+                            </div>
+                            <div class="bg-black/30 p-3 rounded-xl border border-white/5 flex items-center justify-between">
+                                <span class="text-slate-400">Syntactic Harmony</span>
+                                <span class="font-mono text-green-400 font-semibold">98.4%</span>
+                            </div>
+                            <div class="bg-black/30 p-3 rounded-xl border border-white/5 flex items-center justify-between">
+                                <span class="text-slate-400">Primary Tone</span>
+                                <span id="bentoTone" class="font-mono text-pink-400 font-semibold">Poetic / Expressive</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-white/5 text-xs text-slate-400 flex justify-between">
+                        <span>Parser Status</span>
+                        <span class="font-mono text-emerald-400">Optimized</span>
+                    </div>
+                </div>
+
+                <div class="md:col-span-2 bg-[#18191f] border border-white/10 rounded-2xl p-5 shadow-xl">
+                    <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2 mb-3">
+                        <i data-lucide="layers" class="w-4 h-4 text-pink-400"></i> Token Stream Inspector
+                    </h4>
+                    <div id="bentoTokenStream" class="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-3 bg-black/40 rounded-xl border border-white/5 code-font text-xs"></div>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-[#18191f] border border-cyan-500/50 text-cyan-300 px-4 py-3 rounded-xl shadow-2xl transform translate-y-24 opacity-0 transition-all duration-300 z-50 flex items-center gap-3">
+        <i data-lucide="check-circle-2" class="w-5 h-5 text-cyan-400"></i>
+        <span id="toastMessage" class="text-xs font-medium">Action completed successfully!</span>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        lucide.createIcons();
+
+        const PRESETS = {
+            poetry: `"The midnight whispers secrets to the stars,"
+As silent shadows dance across the floor.
+A lonely soul awakens where time scars,
+And dreams of oceans on a distant shore.`,
+            prose: `In the heart of the neon metropolis, electric rivers of light pulse through digital veins. Data streams cascade into infinity as human thoughts merge with machine consciousness. Everything glows, everything breathes, forever evolving in the quantum storm.`,
+            philosophy: `To know thyself is the beginning of all wisdom. In the silence between thoughts, the universe speaks its true code. We are not human beings having a spiritual experience; we are spiritual beings having a human experience.`
+        };
+
+        const THEMES = {
+            dracula: {
+                bg: '#282a36', panel: '#1e1f29', border: '#44475a', text: '#f8f8f2',
+                keyword: '#ff79c6', string: '#50fa7b', function: '#f1fa8c', variable: '#8be9fd',
+                number: '#ffb86c', operator: '#ff79c6', comment: '#6272a4', glow: '255, 121, 198'
+            },
+            nord: {
+                bg: '#2e3440', panel: '#242933', border: '#4c566a', text: '#eceff4',
+                keyword: '#81a1c1', string: '#a3be8c', function: '#88c0d0', variable: '#b48ead',
+                number: '#d08770', operator: '#81a1c1', comment: '#4c566a', glow: '136, 192, 208'
+            },
+            matrix: {
+                bg: '#050505', panel: '#0a0f0a', border: '#1f4028', text: '#00ff66',
+                keyword: '#33ff99', string: '#00cc44', function: '#66ffbb', variable: '#00aa33',
+                number: '#00ffcc', operator: '#00ff66', comment: '#1a4d2e', glow: '0, 255, 102'
+            },
+            cyberpunk: {
+                bg: '#0b091a', panel: '#15102a', border: '#2e1f52', text: '#00f0ff',
+                keyword: '#ff007f', string: '#39ff14', function: '#faed27', variable: '#b026ff',
+                number: '#ff5f1f', operator: '#00f0ff', comment: '#5d4b85', glow: '255, 0, 127'
+            },
+            monokai: {
+                bg: '#272822', panel: '#1e1f1c', border: '#3e3d32', text: '#f8f8f2',
+                keyword: '#f92672', string: '#e6db74', function: '#a6e22e', variable: '#66d9ef',
+                number: '#ae81ff', operator: '#f92672', comment: '#75715e', glow: '249, 38, 114'
+            },
+            solarized: {
+                bg: '#002b36', panel: '#073642', border: '#586e75', text: '#839496',
+                keyword: '#859900', string: '#2aa198', function: '#b58900', variable: '#268bd2',
+                number: '#cb4b16', operator: '#6c71c4', comment: '#586e75', glow: '133, 153, 0'
+            }
+        };
+
+        // Fallback hardcoded dictionaries
+        const DEFAULT_KEYWORDS = ['is', 'are', 'was', 'were', 'be', 'been', 'being', 'the', 'a', 'an', 'and', 'or', 'but', 'if', 'then', 'else', 'when', 'where', 'why', 'how', 'all', 'each', 'every', 'both', 'few', 'more', 'most', 'some', 'any', 'no', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 'just', 'can', 'will', 'shall', 'should', 'would', 'could', 'may', 'might', 'must', 'to', 'from', 'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further', 'once', 'here', 'there', 'now', 'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'through', 'during', 'before', 'after', 'above', 'below', 'up', 'down', 'into', 'onto', 'per', 'и', 'а', 'но', 'да', 'или', 'если', 'то', 'за', 'от', 'до', 'из', 'у', 'к', 'на', 'по', 'о', 'об'];
+        const DEFAULT_FUNCTIONS = ['run', 'walk', 'fly', 'glow', 'shine', 'whisper', 'dance', 'sing', 'create', 'build', 'dream', 'breathe', 'think', 'speak', 'write', 'read', 'listen', 'look', 'see', 'feel', 'touch', 'hear', 'find', 'seek', 'discover', 'explore', 'wander', 'drift', 'flow', 'rise', 'fall', 'burn', 'freeze', 'melt', 'fade', 'grow', 'bloom', 'awaken', 'sleep', 'live', 'die', 'love', 'hate', 'smile', 'laugh', 'cry', 'fight', 'heal', 'transform', 'awakens', 'whispers', 'dances', 'dreams', 'pulses', 'merges', 'breathes', 'evolves', 'speaks', 'know', 'бежать', 'летать', 'сиять', 'танцевать', 'петь', 'создавать', 'строить', 'мечтать', 'дышать', 'думать', 'говорить', 'читать', 'слушать', 'смотреть', 'видеть', 'чувствовать', 'слышать', 'искать', 'открывать', 'исследовать', 'расти', 'цвести', 'спать', 'жить', 'любить', 'ненавидеть', 'улыбаться', 'смеяться', 'плакать', 'исцелять', 'трансформировать'];
+        const DEFAULT_SUFFIXES = ['-ing', '-ed', '-ly', '-s', '-es', '-ость', '-тель', '-ать', '-ять', '-ить'];
+
+        let GLOBAL_KEYWORDS = new Set(DEFAULT_KEYWORDS);
+        let GLOBAL_FUNCTIONS = new Set(DEFAULT_FUNCTIONS);
+        let GLOBAL_SUFFIXES = [...DEFAULT_SUFFIXES];
+
+        let currentMode = 'ide';
+        let currentThemeName = 'dracula';
+        let activeTokens = [];
+
+        window.onload = async function() {
+            console.log("Initializing TextCode Visualizer...");
+            await loadExternalDictionaries();
+            loadPreset('poetry');
+            document.getElementById('themeSelect').addEventListener('change', (e) => {
+                setTheme(e.target.value);
+            });
+            initMatrixCanvas();
+        };
+
+        // Load external dictionary files dynamically with fallback
+        async function loadExternalDictionaries() {
+            try {
+                console.log("Fetching external dictionaries from dicts/...");
+                const [kwRes, fnRes, sufRes] = await Promise.all([
+                    fetch('dicts/keywords.txt'),
+                    fetch('dicts/functions.txt'),
+                    fetch('dicts/suffixes.txt')
+                ]);
+
+                if (!kwRes.ok || !fnRes.ok || !sufRes.ok) {
+                    throw new Error("One or more dictionary files failed to load.");
+                }
+
+                const kwText = await kwRes.text();
+                const fnText = await fnRes.text();
+                const sufText = await sufRes.text();
+
+                GLOBAL_KEYWORDS.clear();
+                GLOBAL_FUNCTIONS.clear();
+                GLOBAL_SUFFIXES.length = 0;
+
+                kwText.split(/[\s,]+/).forEach(w => {
+                    const clean = w.trim().toLowerCase();
+                    if (clean) GLOBAL_KEYWORDS.add(clean);
+                });
+
+                fnText.split(/[\s,]+/).forEach(w => {
+                    const clean = w.trim().toLowerCase();
+                    if (clean) GLOBAL_FUNCTIONS.add(clean);
+                });
+
+                sufText.split(/[\s,]+/).forEach(s => {
+                    const clean = s.trim();
+                    if (clean) GLOBAL_SUFFIXES.push(clean);
+                });
+
+                console.log(`Dictionaries loaded successfully. Keywords: ${GLOBAL_KEYWORDS.size}, Functions: ${GLOBAL_FUNCTIONS.size}, Suffixes: ${GLOBAL_SUFFIXES.length}`);
+            } catch (error) {
+                console.warn("Could not load external dictionaries via fetch (likely due to file:// protocol restriction without a local server). Falling back to built-in dictionaries.", error);
+            }
+        }
+
+        function loadPreset(presetKey) {
+            const textarea = document.getElementById('textInput');
+            textarea.value = PRESETS[presetKey];
+            processText();
+        }
+
+        function clearInput() {
+            document.getElementById('textInput').value = '';
+            processText();
+        }
+
+        function setMode(mode) {
+            currentMode = mode;
+            ['ide', 'matrix', 'bento'].forEach(m => {
+                const viewEl = document.getElementById(`viewIde`);
+                document.getElementById(`viewIde`).classList.add('hidden');
+                document.getElementById(`viewMatrix`).classList.add('hidden');
+                document.getElementById(`viewBento`).classList.add('hidden');
+                
+                const btn = document.getElementById(`modeBtn${m.charAt(0).toUpperCase() + m.slice(1)}`);
+                if (btn) {
+                    btn.className = "px-3 py-1.5 rounded-md text-xs font-medium transition-all text-slate-300 hover:text-white flex items-center gap-1.5";
+                }
+            });
+
+            const activeView = document.getElementById(`view${mode.charAt(0).toUpperCase() + mode.slice(1)}`);
+            if (activeView) activeView.classList.remove('hidden');
+
+            const activeBtn = document.getElementById(`modeBtn${mode.charAt(0).toUpperCase() + mode.slice(1)}`);
+            if (activeBtn) {
+                activeBtn.className = "px-3 py-1.5 rounded-md text-xs font-medium transition-all bg-cyan-500 text-black shadow-sm flex items-center gap-1.5";
+            }
+
+            if (mode === 'matrix') {
+                resizeMatrixCanvas();
+            }
+        }
+
+        function setTheme(themeName) {
+            currentThemeName = themeName;
+            const t = THEMES[themeName];
+            
+            document.documentElement.style.setProperty('--glow-color', t.glow);
+            
+            const viewIde = document.getElementById('viewIde');
+            viewIde.style.backgroundColor = t.panel;
+            viewIde.style.borderColor = t.border;
+            viewIde.style.color = t.text;
+
+            const ideHeader = document.getElementById('ideHeader');
+            ideHeader.style.backgroundColor = t.bg;
+            ideHeader.style.borderColor = t.border;
+
+            const ideFooter = document.getElementById('ideFooter');
+            ideFooter.style.backgroundColor = t.bg;
+            ideFooter.style.borderColor = t.border;
+
+            renderOutput();
+        }
+
+        function tokenizeText(text) {
+            const regex = /(".*?"|'.*?'|#.*?
+|\/\/.*?
+|\d+(?:\.\d+)?|[a-zA-ZÀ-ÿа-яА-ЯёЁ]+|[^\s\w]|\s+)/g;
+            let match;
+            let tokens = [];
+            
+            while ((match = regex.exec(text)) !== null) {
+                let val = match[0];
+                let type = 'text';
+                
+                if (/^(".*?"|'.*?')$/.test(val)) {
+                    type = 'string';
+                } else if (/^(#|\/\/)/.test(val) || /^[\[].*[\]]$/.test(val)) {
+                    type = 'comment';
+                } else if (/^\d+/.test(val)) {
+                    type = 'number';
+                } else if (/^[^\s\w]+$/.test(val)) {
+                    type = 'operator';
+                } else if (/^[a-zA-ZÀ-ÿа-яА-ЯёЁ]+$/.test(val)) {
+                    let lower = val.toLowerCase();
+                    const matchesSuffix = GLOBAL_SUFFIXES.some(suffix => lower.endsWith(suffix));
+
+                    if (GLOBAL_KEYWORDS.has(lower)) {
+                        type = 'keyword';
+                    } else if (GLOBAL_FUNCTIONS.has(lower) || matchesSuffix) {
+                        type = 'function';
+                    } else if (val[0] === val[0].toUpperCase()) {
+                        type = 'variable';
+                    } else {
+                        type = 'keyword';
+                    }
+                } else if (/^\s+$/.test(val)) {
+                    type = 'whitespace';
+                }
+                tokens.push({ value: val, type: type });
+            }
+            return tokens;
+        }
+
+        function processText() {
+            const text = document.getElementById('textInput').value;
+            document.getElementById('charCount').innerText = `${text.length} chars`;
+            
+            activeTokens = tokenizeText(text);
+            renderOutput();
+            updateStats();
+        }
+
+        function renderOutput() {
+            const t = THEMES[currentThemeName];
+            
+            const codeOutput = document.getElementById('codeOutput');
+            const lineNumbers = document.getElementById('lineNumbers');
+            
+            codeOutput.innerHTML = '';
+            
+            let linesCount = 1;
+            let currentLineDiv = document.createElement('div');
+            currentLineDiv.className = 'flex flex-wrap items-center';
+            
+            activeTokens.forEach(token => {
+                if (token.value.includes('\n')) {
+                    const parts = token.value.split('\n');
+                    parts.forEach((part, idx) => {
+                        if (part) {
+                            appendTokenSpan(currentLineDiv, { value: part, type: token.type }, t);
+                        }
+                        if (idx < parts.length - 1) {
+                            codeOutput.appendChild(currentLineDiv);
+                            linesCount++;
+                            currentLineDiv = document.createElement('div');
+                            currentLineDiv.className = 'flex flex-wrap items-center';
+                        }
+                    });
+                } else {
+                    appendTokenSpan(currentLineDiv, token, t);
+                }
+            });
+            codeOutput.appendChild(currentLineDiv);
+
+            let lineNumsHtml = '';
+            for (let i = 1; i <= linesCount; i++) {
+                lineNumsHtml += `<span>${i}</span>\n`;
+            }
+            lineNumbers.innerHTML = lineNumsHtml;
+            document.getElementById('statusLnCol').innerText = `Ln ${linesCount}, Col 1`;
+            document.getElementById('statusTokensCount').innerText = `${activeTokens.length} tokens`;
+
+            const matrixStream = document.getElementById('matrixStreamOutput');
+            matrixStream.innerHTML = '';
+            activeTokens.forEach(token => {
+                if (token.type !== 'whitespace') {
+                    const span = document.createElement('span');
+                    span.innerText = token.value;
+                    span.style.color = getTokenColor(token.type, t);
+                    span.className = 'px-1.5 py-0.5 rounded hover:bg-white/10 transition cursor-pointer relative group';
+                    span.title = `Type: ${token.type.toUpperCase()}`;
+                    matrixStream.appendChild(span);
+                } else {
+                    matrixStream.appendChild(document.createTextNode(token.value));
+                }
+            });
+            document.getElementById('matrixTokenCount').innerText = `${activeTokens.length} stream nodes`;
+
+            renderBentoCards(t);
+        }
+
+        function appendTokenSpan(container, token, t) {
+            const span = document.createElement('span');
+            span.innerText = token.value;
+            span.style.color = getTokenColor(token.type, t);
+            span.className = 'transition-colors duration-150 hover:underline cursor-pointer relative group';
+            span.setAttribute('title', `Category: ${token.type.toUpperCase()}`);
+            container.appendChild(span);
+        }
+
+        function getTokenColor(type, t) {
+            switch(type) {
+                case 'keyword': return t.keyword;
+                case 'string': return t.string;
+                case 'function': return t.function;
+                case 'variable': return t.variable;
+                case 'number': return t.number;
+                case 'operator': return t.operator;
+                case 'comment': return t.comment;
+                default: return t.text;
+            }
+        }
+
+        function updateStats() {
+            let counts = { keyword: 0, function: 0, variable: 0, string: 0, number: 0, operator: 0 };
+            activeTokens.forEach(tok => {
+                if (counts[tok.type] !== undefined) counts[tok.type]++;
+            });
+
+            document.getElementById('statKeywords').innerText = counts.keyword;
+            document.getElementById('statFunctions').innerText = counts.function;
+            document.getElementById('statVariables').innerText = counts.variable;
+        }
+
+        function renderBentoCards(t) {
+            let counts = { keyword: 0, function: 0, variable: 0, string: 0, number: 0, operator: 0 };
+            activeTokens.forEach(tok => {
+                if (counts[tok.type] !== undefined) counts[tok.type]++;
+            });
+            const total = activeTokens.length || 1;
+
+            const distContainer = document.getElementById('bentoDistribution');
+            distContainer.innerHTML = '';
+            
+            Object.keys(counts).forEach(key => {
+                const count = counts[key];
+                const pct = Math.round((count / total) * 100);
+                const color = getTokenColor(key, t);
+                
+                const row = document.createElement('div');
+                row.className = 'space-y-1';
+                row.innerHTML = `
+                    <div class="flex justify-between text-xs font-mono">
+                        <span class="capitalize text-slate-300">${key}</span>
+                        <span style="color: ${color}">${count} (${pct}%)</span>
+                    </div>
+                    <div class="w-full h-2 bg-black/40 rounded-full overflow-hidden border border-white/5">
+                        <div class="h-full rounded-full transition-all duration-500" style="width: ${pct}%; background-color: ${color}"></div>
+                    </div>
+                `;
+                distContainer.appendChild(row);
+            });
+
+            document.getElementById('bentoTotalTokens').innerText = activeTokens.length;
+
+            const bentoStream = document.getElementById('bentoTokenStream');
+            bentoStream.innerHTML = '';
+            activeTokens.forEach(tok => {
+                if (tok.type !== 'whitespace') {
+                    const badge = document.createElement('span');
+                    badge.innerText = `${tok.value} [${tok.type}]`;
+                    badge.style.borderColor = getTokenColor(tok.type, t);
+                    badge.style.color = getTokenColor(tok.type, t);
+                    badge.className = 'px-2 py-1 rounded-lg border bg-black/30 text-[11px] font-mono shadow-sm';
+                    bentoStream.appendChild(badge);
+                }
+            });
+        }
+
+        function initMatrixCanvas() {
+            const canvas = document.getElementById('matrixCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            function resize() {
+                canvas.width = canvas.parentElement.offsetWidth;
+                canvas.height = canvas.parentElement.offsetHeight;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            const chars = '01XYZ{}[]<>/\\*#$_-+=~&|';
+            const fontSize = 14;
+            let columns = canvas.width / fontSize;
+            let drops = [];
+            for (let i = 0; i < columns; i++) drops[i] = 1;
+
+            function draw() {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                ctx.fillStyle = '#00ff66';
+                ctx.font = fontSize + 'px monospace';
+                
+                for (let i = 0; i < drops.length; i++) {
+                    const text = chars.charAt(Math.floor(Math.random() * chars.length));
+                    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                        drops[i] = 0;
+                    }
+                    drops[i]++;
+                }
+            }
+            setInterval(draw, 33);
+        }
+
+        function resizeMatrixCanvas() {
+            const canvas = document.getElementById('matrixCanvas');
+            if (canvas) {
+                canvas.width = canvas.parentElement.offsetWidth;
+                canvas.height = canvas.parentElement.offsetHeight;
+            }
+        }
+
+        function copyHtmlSnippet() {
+            const t = THEMES[currentThemeName];
+            let htmlSnippet = `<div style="background-color: ${t.bg}; color: ${t.text}; padding: 20px; font-family: 'JetBrains Mono', monospace; border-radius: 12px;">\n`;
+            activeTokens.forEach(tok => {
+                if (tok.type === 'whitespace') {
+                    htmlSnippet += tok.value;
+                } else {
+                    const color = getTokenColor(tok.type, t);
+                    htmlSnippet += `<span style="color: ${color};" title="${tok.type}">${escapeHtml(tok.value)}</span>`;
+                }
+            });
+            htmlSnippet += `\n</div>`;
+
+            const textArea = document.createElement("textarea");
+            textArea.value = htmlSnippet;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showToast("HTML snippet copied to clipboard!");
+            } catch (err) {
+                showToast("Failed to copy snippet");
+            }
+            document.body.removeChild(textArea);
+        }
+
+        function downloadHtmlFile() {
+            const t = THEMES[currentThemeName];
+            let bodyContent = '';
+            activeTokens.forEach(tok => {
+                if (tok.type === 'whitespace') {
+                    bodyContent += tok.value.replace(/\n/g, '<br>');
+                } else {
+                    const color = getTokenColor(tok.type, t);
+                    bodyContent += `<span style="color: ${color};" title="${tok.type}">${escapeHtml(tok.value)}</span>`;
+                }
+            });
+
+            const fullHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TextCode Visualizer Export</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body style="background-color: #0b0c10; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0;">
+    <div style="background-color: ${t.panel}; border: 1px solid ${t.border}; padding: 30px; border-radius: 16px; max-width: 800px; width: 100%; box-shadow: 0 20px 40px rgba(0,0,0,0.5);">
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 15px; line-height: 1.6; color: ${t.text}; white-space: pre-wrap;">
+            ${bodyContent}
+        </div>
+    </div>
+</body>
+</html>`;
+
+            const blob = new Blob([fullHtml], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'textcode-visualization.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast("Standalone HTML file downloaded!");
+        }
+
+        function escapeHtml(text) {
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMessage').innerText = message;
+            toast.classList.remove('translate-y-24', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-24', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
